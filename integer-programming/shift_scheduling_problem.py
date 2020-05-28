@@ -11,7 +11,7 @@ xs = LpVariable.dicts('x', (range(M), range(D)), 0, 1, 'Binary')
 # 問題を定義します。ここから……
 problem = LpProblem('shift-scheduling-problem', LpMinimize)
 
-# 1日に2名以上、かつ、できるだけ少なくという制約を追加します。2名より多くても少なくてもペナルティが発生するようになっています
+# 1日に2名以上という制約を追加します
 for d in range(D):
     problem += reduce(lambda acc, m: acc + xs[m][d], range(M), 0) >= 2
 
