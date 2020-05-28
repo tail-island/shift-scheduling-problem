@@ -251,7 +251,7 @@ individual = tools.selBest(population, 1)[0]
 # 結果を出力します
 print(f'fitness:\t{individual.fitness.values}')
 
-# 非単位で、出社する社員を出力します
+# 日単位で、出社する社員を出力します
 for d in range(D):
     print(tuple(keep(lambda m: 'ABCDE'[m] if individual[m * D + d] else False, range(M))))
 ~~~
