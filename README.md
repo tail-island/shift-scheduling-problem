@@ -226,7 +226,7 @@ def evaluate(individual):
     return (member_size(), different_member())
 
 # どのように遺伝的アルゴリズムするのかをDEAPで定義します
-creator.create('Fitness', base.Fitness, weights=(-1.0, -0.5))
+creator.create('Fitness', base.Fitness, weights=(-1.0, -0.5))  # evaluate()の結果が小さいほど良いので、ウェイトにマイナスを付けておきます
 creator.create('Individual', list, fitness=creator.Fitness)
 
 toolbox = base.Toolbox()
