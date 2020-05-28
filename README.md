@@ -188,7 +188,7 @@ QUBOだからxsの要素の値は1か0のどちらかなので、だから0日�
 
 調子に乗って、なんだか名前が素敵な遺伝的アルゴリズムでやりましょう。
 
-例によって遺伝的アルゴリズムの処理を作るのは面倒だったので、[DEAP](https://deap.readthedocs.io/en/master/)というオープン・ソースのライブラリを使用しました。コードはこんな感じ。
+例によって遺伝的アルゴリズムをする処理を作るのは面倒だったので、[DEAP](https://deap.readthedocs.io/en/master/)というオープン・ソースのライブラリを使用しました。コードはこんな感じ。
 
 ~~~ python
 from deap      import algorithms, base, creator, tools
