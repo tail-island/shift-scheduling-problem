@@ -407,7 +407,7 @@ for _ in range(10):
 
 実は、リストの要素を2個選ぶ処理は、プログラムで表現してよいならとても簡単なんです。こんな感じ。
 
-~~~
+~~~ python
 def getTwo(xs):
     for i in range(len(xs)):
         for j in range(i + 1, len(xs)):
