@@ -1,63 +1,60 @@
-from deap      import algorithms, base, creator, tools
-from functools import reduce
-from funcy     import *
-from random    import randint, random, seed
+import numpy as np
+
+from funcy  import *
+from neal   import SimulatedAnnealingSampler
+from pyqubo import Array, Constraint, Placeholder, Sum
 
 M = 5   # 社員の数
 D = 10  # 日数
 
-# 評価関数
-def evaluate(individual):
-    # 1日に2名以上、かつ、できるだけ少なくという制約を追加します。2名より多くても少なくてもペナルティが発生するようになっています
-    def member_size():
-        result = 0
+BETA_RANGE         = (5, 100)  # 焼きなましの温度の逆数。大きい方が解が安定しますが、局所解に陥る可能性が高くなってしまいます
+NUM_READS          = 10        # 焼きなましする回数。NUM_READS個の解が生成されます。多いほうが良い解がでる可能性が高くなります
+NUM_SWEEPS         = 100000    # 焼きなましのステップを実施する回数。1つの解を生成するために繰り返し処理をする回数です。大きい方が良い解がでる可能性が高くなります
+BETA_SCHEDULE_TYPE = 'linear'  # 焼きなましの温度をどのように変化させるか。linearだと線形に変化させます
 
-        for d in range(D):
-            result += abs(reduce(lambda acc, m: acc + individual[m * D + d], range(M), 0) - 2)  # 値そのものをしようしているので、absとかも使えます
+# nealを使用してイジング模型を焼きなましして解を返します
+def solve(hs, js):
+    response = SimulatedAnnealingSampler().sample_ising(hs, js, beta_range=BETA_RANGE, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, beta_schedule_type=BETA_SCHEDULE_TYPE, seed=1)
 
-        return result
+    # NUM_READS個の解の中から、もっとも良い解を返します
+    return tuple(response.record.sample[np.argmin(response.record.energy)])
 
-    # 同じ人と別の日に出社しないという制約を追加します
-    def different_member():
-        result = 0
+# QUBOを構成する変数を定義します
+xs = Array.create('x', shape=(M, D), vartype='BINARY')
 
-        for m1 in range(M):
-            for m2 in range(m1 + 1, M):
-                for d1 in range(D):
-                    for d2 in range(d1 + 1, D):
-                        result += individual[m1 * D + d1] * individual[m2 * D + d1] * individual[m1 * D + d2] * individual[m2 * D + d2]
+# チューニングのための変数を定義します
+a = Placeholder('A')
+b = Placeholder('B')
 
-        return result
+# QUBOを定義します。ここから……
+h = 0
 
-    # 複数の評価の視点を、それぞれの視点での評価結果を要素とするタプルで返します
-    return (member_size(), different_member())
+# 1日に2名以上、かつ、できるだけ少なくという制約を追加します。2名より多くても少なくてもペナルティが発生するようになっています
+for d in range(D):
+    h += a * Constraint((Sum(0, M, lambda m: xs[m][d]) - 2) ** 2, f'day-{d}')  # 2を引くと、少なければ負、多ければ正の数になるわけですが、それを2乗して正の値にします
 
-# どのように遺伝的アルゴリズムするのかをDEAPで定義します
-creator.create('Fitness', base.Fitness, weights=(-1.0, -0.5))
-creator.create('Individual', list, fitness=creator.Fitness)
+# 同じ人と別の日に出社しないという制約を追加します
+for m1 in range(M):
+    for m2 in range(m1 + 1, M):
+        for d1 in range(D):
+            for d2 in range(d1 + 1, D):
+                h += b * xs[m1][d1] * xs[m2][d1] * xs[m1][d2] * xs[m2][d2]  # xsは1か0なので、掛け算をする場合は、全部1の場合にだけ1になります
 
-toolbox = base.Toolbox()
+# コンパイルしてモデルを作ります
+model = h.compile()
+# ……ここまで。QUBOを定義します
 
-toolbox.register('attribute', randint, 0, 1)
-toolbox.register('individual', tools.initRepeat, creator.Individual, toolbox.attribute, n=M * D)
-toolbox.register('population', tools.initRepeat, list, toolbox.individual)
-toolbox.register('mate', tools.cxTwoPoint)
-toolbox.register('mutate', tools.mutFlipBit, indpb=0.05)
-toolbox.register('select', tools.selTournament, tournsize=3)
-toolbox.register('evaluate', evaluate)
+# チューニングのための変数の値
+feed_dict = {'A': 2.0, 'B': 1.0}
 
-# 再現性のために、ランダムのシードを固定します
-seed(1)
-
-# 遺伝アルゴリズムで問題を解きます
-population, _ = algorithms.eaSimple(toolbox.population(n=100), toolbox, 0.5, 0.2, 300, verbose=False)
-
-# 最も良い解を取得します
-individual = tools.selBest(population, 1)[0]
+# イジング模型を生成して、nealで解きます
+hs, js, _ = model.to_ising(feed_dict=feed_dict)
+answer, broken, energy = model.decode_solution(dict(enumerate(solve(hs, js))), vartype='SPIN', feed_dict=feed_dict)
 
 # 結果を出力します
-print(f'fitness:\t{individual.fitness.values}')
+print(f'broken:\t{len(broken)}')  # Constraintに違反した場合は、brokenに値が入ります
+print(f'energy:\t{energy}')       # QUBOのエネルギー。今回のモデルでは、全ての制約を満たした場合は0になります
 
-# 非単位で、出社する社員を出力します
+# 日単位で、出社する社員を出力します
 for d in range(D):
-    print(tuple(keep(lambda m: 'ABCDE'[m] if individual[m * D + d] else False, range(M))))
+    print(tuple(keep(lambda m: 'ABCDE'[m] if answer['x'][m][d] == 1 else False, range(M))))

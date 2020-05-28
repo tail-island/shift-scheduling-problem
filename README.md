@@ -6,13 +6,13 @@
 
 * 社員はA、B、C、D、Eの5人
 * 最低2名出社しなければならない。そして、できるだけ出社する人数を少なくしたい
-* 社員のコミュニケーション活性化のために、できるだけ異なるペアの社員が出社するようにしたい。可能なら、たとえばAさんとBさんというペアが出社するのは一度だけにしたい
+* 社員のコミュニケーション活性化のために、できるだけ異なるペアの社員が出社するようにしたい。可能なら、たとえばAさんとBさんというペアが出社するのは一度だけにしたい（もちろん、席を離す等の感染対策を実施した上で）。
 
 ## [イジング模型を使用した焼きなまし法](https://github.com/tail-island/shift-scheduling-problem/blob/master/simulated-annealing/shift_scheduling_problem.py)
 
 まず最初に、D-Waveの量子焼きなまし法でも使われているイジング模型でやってみましょう。ただし、量子焼きなまし法は普通のコンピューターでは実行できませんから、普通の焼きなまし法でやります。富士通のデジタル・アニーラとかと同じやり方ですね。
 
-でも、イジング模型を焼きなまし法で解く処理を作るのは面倒だったので、[D-Wave社のneal](https://docs.ocean.dwavesys.com/projects/neal/en/latest/index.html)を使用しました。あと、イジング模型を手作りするのもかなーり大変（というか、私の数学能力が低すぎてカケラも理解できなかった）ので、イジング模型の生成は[リクルート・コミュニケーションズ社のPyQUBO](https://pyqubo.readthedocs.io/en/latest/)を使用しました。
+でも、イジング模型を焼きなまし法で解く処理を作るのは面倒だったので、[D-Wave社のneal](https://docs.ocean.dwavesys.com/projects/neal/en/latest/index.html)を使用しました。あと、イジング模型を手作りするのもかなーり大変（というか、私の数学能力が低すぎてカケラも理解できない）ので、イジング模型の生成は[リクルート・コミュニケーションズ社のPyQUBO](https://pyqubo.readthedocs.io/en/latest/)を使用しました。
 
 というわけで、nealとPyQUBOを使用して問題を解くコードはこんな感じ。
 
@@ -21,7 +21,7 @@ import numpy as np
 
 from funcy  import *
 from neal   import SimulatedAnnealingSampler
-from pyqubo import Array, Constraint, Placeholder, Sum, solve_qubo
+from pyqubo import Array, Constraint, Placeholder, Sum
 
 M = 5   # 社員の数
 D = 10  # 日数
