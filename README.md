@@ -186,7 +186,7 @@ QUBOだからxsの要素の値は1か0のどちらかなので、だから0日�
 
 ## [遺伝的アルゴリズム](https://github.com/tail-island/shift-scheduling-problem/blob/master/genetic-algorithms/shift_scheduling_problem.py)
 
-調子に乗って、なんだか名前が素敵な遺伝的アルゴリズムでやりましょう。
+調子に乗って、なんだか名前が浪漫的な遺伝的アルゴリズムでやりましょう。
 
 例によって遺伝的アルゴリズムをする処理を作るのは面倒だったので、[DEAP](https://deap.readthedocs.io/en/master/)というオープン・ソースのライブラリを使用しました。コードはこんな感じ。
 
@@ -359,7 +359,7 @@ Optimal
 ('A', 'B')
 ~~~
 
-全ての制約を満たす最適（Optimal）な解ですな。実行時間は0.132秒でとても速い！
+最適（Optimal）な解ですな。実行時間は0.132秒でとても速い！
 
 ### 簡単な解説
 
